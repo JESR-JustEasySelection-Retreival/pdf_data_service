@@ -32,7 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 /src/main/resources/EncodedImageExample1.txt
-/libhashing.dll
-/libhashing.dylib
+/src/main/libhashing.dll
+/src/main/libhashing.dylib
 /libhashing.h
-/libhashing.so
+/src/main/libhashing.so
