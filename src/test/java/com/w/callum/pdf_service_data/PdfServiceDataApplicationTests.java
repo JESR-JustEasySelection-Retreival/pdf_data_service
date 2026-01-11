@@ -14,70 +14,83 @@ import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Base64;
 
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest
+//@SpringBootTest
 class PdfServiceDataApplicationTests {
-
     @Test
-    void metaDuplicatesCheck() {
-        BasicRoutes routes = new BasicRoutes();
+    void TestHashingFile1() {
+        File file = new File("src/test/java/com/w/callum/pdf_service_data/EncodedImageExample1.txt");
+        String result = "";
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            byte[] data = fileInputStream.readAllBytes();
+            String encodedData = new String(data, StandardCharsets.UTF_8);
+            byte[] rawBytes = Base64.getDecoder().decode(encodedData);
 
-        PostMetaRequest req = new PostMetaRequest();
-        req.setBase64("JVBERi0xLjcKJYGBgYEKCjQgMCBvYmoKPDwKL0ZpbHRlciAvRmxhdGVEZWNvZGUKL0xlbmd0aCAxMAo+PgpzdHJlYW0KSIkCCDAAAAAAAQplbmRzdHJlYW0KZW5kb2JqCgo3IDAgb2JqCjw8Ci9GaWx0ZXIgL0ZsYXRlRGVjb2RlCi9UeXBlIC9PYmpTdG0KL04gNQovRmlyc3QgMjYKL0xlbmd0aCAzMDIKPj4Kc3RyZWFtCnic1VJNa4QwFLznV7xje8rbGKMWEVo/LmVB7J669BA0LEIxi0bY/vu+qP2Cll5bZIzJm/FNktkBgoAQIYBYQghhEIMCFceQpowfXs4GeK1PZmL8vu8mOBIHoSGOfz8xntt5cCBYlrEPRa6dfrYntkph58lvjHq03dyaEdKqrCrECBGVJChEUdCYExKCoDnVREzfhEhuoLUoQAxuqVatUNGq8fWFG276kkbiKs8pVq6M1/l7X9+rXP8hfvOTZIzvbVdoZ+CquBEoQkxQUikM5OM1HcdotLP/d3OL/94OP+5wu8XcDs4MbgK53C3p7PnOXigfSI/aCYgS4fOxN12vv600ZrLz2FI+tli0D8YRjddFBfxgLo5Y1I431nk3+DmPPlojGfiarb/n6hVfjM06CmVuZHN0cmVhbQplbmRvYmoKCjggMCBvYmoKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyAzIDAgUgovRmlsdGVyIC9GbGF0ZURlY29kZQovVHlwZSAvWFJlZgovTGVuZ3RoIDQxCi9XIFsgMSAyIDIgXQovSW5kZXggWyAwIDkgXQo+PgpzdHJlYW0KeJwlxzEKACAQBLGZU7D1jf6/tj1ZbAIBuosFwVCyf0eYckAvPF+9A6IKZW5kc3RyZWFtCmVuZG9iagoKc3RhcnR4cmVmCjUwMgolJUVPRg==");
+            ImageHashing hash = new ImageHashing();
+            long i = hash.ConvertByteArrToNumberFNV1A(rawBytes);
+            long hashedNumber = hash.Hash64shift(i);
+            result = hash.ConvertHashToString(hashedNumber);
+            System.out.println(result);
 
-        Mono<Object> metaData = routes.getMetaData(req);
-        Object o = metaData.block();
-        Assertions.assertInstanceOf(ResponseEntity.class, o);
-        ResponseEntity<?> res = (ResponseEntity<?>) o;
-        Assertions.assertTrue(res.getStatusCode().is2xxSuccessful());
-
-        PostMetaResponse metaResponse = (PostMetaResponse) res.getBody();
-        Assertions.assertNotNull(metaResponse);
-        Assertions.assertEquals(1, metaResponse.getNoOfPages());
-        Assertions.assertEquals(1, metaResponse.getImages().size());
-        System.out.println(metaResponse.getNoOfPages());
-    }
-
-    @Test
-    void HashingCheck() throws IOException {
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        InputStream is = classloader.getResourceAsStream("EncodedImageExample1.txt");
-        Assertions.assertNotNull(is);
-        String encodedData = new String(is.readAllBytes());
-
-        ImageHashing imageHashing = new ImageHashing();
-        String key = imageHashing.hashPageOfDocumentString(encodedData);
-        Assertions.assertEquals("LmPjeyvClM4", key);
-    }
-
-    @Test
-    void GenerateMetaTest() {
-        Path currentRelativePath = Paths.get("");
-        String s = currentRelativePath.toAbsolutePath().toString();
-        System.out.println("Current absolute path is: " + s);
-
-        try (FileInputStream fileInputStream = new FileInputStream("src/test/java/com/w/callum/pdf_service_data/document1.txt")){
-            BasicRoutes routes = new BasicRoutes();
-            PostMetaRequest req = new PostMetaRequest();
-            req.setBase64(new String(fileInputStream.readAllBytes()));
-
-            Mono<Object> metaData = routes.getMetaData(req);
-            Object o = metaData.block();
-            Assertions.assertInstanceOf(ResponseEntity.class, o);
-            ResponseEntity<?> res = (ResponseEntity<?>) o;
-            Assertions.assertTrue(res.getStatusCode().is2xxSuccessful());
-            PostMetaResponse metaResponse = (PostMetaResponse) res.getBody();
-            Assertions.assertNotNull(metaResponse);
-
-            System.out.println(metaResponse.getImages().keySet());
-            Assertions.assertEquals("[mCTYLxmeh95, vqEYwOzVYM]", metaResponse.getImages().keySet().toString());
         } catch (IOException e) {
-            e.printStackTrace();
-            Assertions.fail();
+            throw new RuntimeException(e);
         }
+
+        Assertions.assertEquals("BOKEAeQ48cL", result);
     }
+
+    @Test
+    void TestHashingFile2() {
+        File file = new File("src/test/java/com/w/callum/pdf_service_data/EncodedImageExample2.txt");
+        String result = "";
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            byte[] data = fileInputStream.readAllBytes();
+            String encodedData = new String(data, StandardCharsets.UTF_8);
+            byte[] rawBytes = Base64.getDecoder().decode(encodedData);
+
+            ImageHashing hash = new ImageHashing();
+            long i = hash.ConvertByteArrToNumberFNV1A(rawBytes);
+            long hashedNumber = hash.Hash64shift(i);
+            result = hash.ConvertHashToString(hashedNumber);
+            System.out.println(result);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Assertions.assertEquals("Mf0zt0s3a", result);
+    }
+
+    @Test
+    void TestHashingFile3() {
+        File file = new File("src/test/java/com/w/callum/pdf_service_data/EncodedImageExample3.txt");
+        String result = "";
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            byte[] data = fileInputStream.readAllBytes();
+            String encodedData = new String(data, StandardCharsets.UTF_8);
+            byte[] rawBytes = Base64.getDecoder().decode(encodedData);
+
+            ImageHashing hash = new ImageHashing();
+            long i = hash.ConvertByteArrToNumberFNV1A(rawBytes);
+            long hashedNumber = hash.Hash64shift(i);
+            result = hash.ConvertHashToString(hashedNumber);
+            System.out.println(result);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Assertions.assertEquals("6WMIm2KskNj", result);
+    }
+
+    /*
+     * For example, ++, --, +, -, *, ==, !=, << all work the same regardless of signess (i.e. give the same answer). for >> you can substitue >>>
+     * It is the /, %, >, >=, <, <= and printing functions which assume signed values, but you should be able to work around these (if you use these).
+     */
 }

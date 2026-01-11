@@ -59,9 +59,9 @@ public class BasicRoutes {
 
                         ImageHashing imageHashing = new ImageHashing();
                         byte[] imageBytes = outputStream.toByteArray();
-                        String imageString = Base64.getEncoder().encodeToString(imageBytes);
-
-                        String key = imageHashing.hashPageOfDocumentString(imageString);
+                        long numberFNV1A = imageHashing.ConvertByteArrToNumberFNV1A(imageBytes);
+                        long hashedNumber = imageHashing.Hash64shift(numberFNV1A);
+                        String key = imageHashing.ConvertHashToString(hashedNumber);
 
                         if (keys.contains(key)) { //Duplication checking
                             continue;
