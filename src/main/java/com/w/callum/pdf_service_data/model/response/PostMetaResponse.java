@@ -12,13 +12,13 @@ public class PostMetaResponse {
     @JsonProperty("numberOfPages")
     private int noOfPages;
     @JsonProperty("images")
-    private Map<String, byte[]> images;
+    private Map<String, String> images;
 
     @JsonCreator
     public PostMetaResponse() {
     }
 
-    public PostMetaResponse(float height, float width, Map<String, byte[]> images) {
+    public PostMetaResponse(float height, float width, Map<String, String> images) {
         this.height = height;
         this.width = width;
         this.images = images;
@@ -48,11 +48,11 @@ public class PostMetaResponse {
         this.noOfPages = noOfPages;
     }
 
-    public Map<String, byte[]> getImages() {
+    public Map<String, String> getImages() {
         return images;
     }
 
-    public void setImages(Map<String, byte[]> images) {
+    public void setImages(Map<String, String> images) {
         this.images = images;
     }
 

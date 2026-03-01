@@ -1,6 +1,10 @@
 package com.w.callum.pdf_service_data.controller;
 
-import com.w.callum.pdf_service_data.model.request.PostMetaRequest;
+import com.w.callum.pdf_service_data.extraction.ExtractionTextStripper;
+import com.w.callum.pdf_service_data.model.Coordinate;
+import com.w.callum.pdf_service_data.model.ExtractionRequest;
+import com.w.callum.pdf_service_data.model.Selection;
+import com.w.callum.pdf_service_data.model.request.MetaRequest;
 import com.w.callum.pdf_service_data.model.response.PostMetaResponse;
 import com.w.callum.pdf_service_data.util.Env;
 import com.w.callum.pdf_service_data.util.ImageHashing;
@@ -21,8 +25,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 
@@ -34,12 +37,17 @@ public class BasicRoutes {
     }
 
     @PostMapping(path = "/meta", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<Object> getMetaData(@RequestBody PostMetaRequest dataRequest) {
+    public Mono<Object> getMetaData(@RequestBody MetaRequest data) {
         return Mono.create(monoSink -> {
             float height, width;
             int noOfPages;
             PostMetaResponse meta;
-            byte[] decodedDocument = Base64.getDecoder().decode(dataRequest.getBase64());
+            String encodedData = data.getBase64();
+            System.out.println("encodedData");
+            System.out.println(encodedData);
+            byte[] decodedDocument = Base64.getDecoder().decode(encodedData);
+            System.out.println("decodedDocument");
+            System.out.println(Arrays.toString(decodedDocument));
             try (PDDocument document = Loader.loadPDF(decodedDocument)) {
                 noOfPages = document.getNumberOfPages();
                 PDPage documentPage = document.getPage(0);
@@ -49,25 +57,32 @@ public class BasicRoutes {
                 width = rec.getWidth();
 
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
-                Map<String, byte[]> encodedArr = new HashMap<>(noOfPages);
+                Map<String, String> encodedArr = new HashMap<>(noOfPages);
                 HashSet<String> keys = new HashSet<>(noOfPages);
                 meta = new PostMetaResponse(height, width, encodedArr);
+
                 for (int i = 0; i < noOfPages; i++) {
                     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                         BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(i, Env.getEnvOrDefault("DOCUMENT_DPI",Float::parseFloat, 72.0f));
                         ImageIO.write(bufferedImage, "png", outputStream);
+                        byte[] imageBytes = outputStream.toByteArray();
+                        String pageEncoded = Base64.getEncoder().encodeToString(imageBytes);
+                        System.out.println(Arrays.toString(imageBytes));
+                        System.out.println(pageEncoded);
 
                         ImageHashing imageHashing = new ImageHashing();
-                        byte[] imageBytes = outputStream.toByteArray();
                         long numberFNV1A = imageHashing.ConvertByteArrToNumberFNV1A(imageBytes);
+                        System.out.println("numberFNV1A: " + numberFNV1A);
                         long hashedNumber = imageHashing.Hash64shift(numberFNV1A);
+                        System.out.println("hashedNumber: " + hashedNumber);
                         String key = imageHashing.ConvertHashToString(hashedNumber);
+                        System.out.println("key: " + key);
 
-                        if (keys.contains(key)) { //Duplication checking
+                        if (keys.contains(key)) {
                             continue;
                         } else {
                             keys.add(key);
-                            encodedArr.put(key, imageBytes);
+                            encodedArr.put(key, pageEncoded);
                         }
 
                         meta.setNoOfPages(keys.size());
@@ -89,7 +104,20 @@ public class BasicRoutes {
     }
 
     @PostMapping("/extract")
-    public Mono<?> getExtractData() {
+    public Mono<?> getExtractData(@RequestBody ExtractionRequest data) {
+        for(Selection selection : data.selections()){
+            Coordinate coordinate = selection.coordinate();
+
+            byte[] bytes = Base64.getDecoder().decode(data.base64EncodedDocument().getBytes(StandardCharsets.UTF_8));
+            try(PDDocument document = Loader.loadPDF(bytes)){
+                ExtractionTextStripper extractionTextStripper = new ExtractionTextStripper(selection, document);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+
+
         return Mono.just(ResponseEntity.badRequest().build());
     }
 }

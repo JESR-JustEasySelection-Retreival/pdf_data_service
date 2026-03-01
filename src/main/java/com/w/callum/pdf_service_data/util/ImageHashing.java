@@ -1,10 +1,6 @@
 package com.w.callum.pdf_service_data.util;
 
-import com.sun.jna.Native;
-import org.springframework.context.support.SimpleThreadScope;
-
 import java.io.*;
-import java.util.Base64;
 
 public class ImageHashing {
     public long ConvertByteArrToNumberFNV1A(byte[] bytes) {
