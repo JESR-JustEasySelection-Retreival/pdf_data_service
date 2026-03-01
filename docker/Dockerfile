@@ -5,7 +5,7 @@ FROM openjdk:24-jdk
 WORKDIR /app
 
 # Step 3: Copy the Spring Boot JAR file into the container
-COPY target/pdf_service_data-0.0.1-SNAPSHOT.jar /app/my-spring-boot-app.jar
+COPY target/pdf_service_data-0.0.2-SNAPSHOT.jar /app/my-spring-boot-app.jar
 
 # Step 4: Expose the port your application runs on
 EXPOSE 8080

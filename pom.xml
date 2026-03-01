@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.w.callum</groupId>
     <artifactId>pdf_service_data</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>pdf_service_data</name>
     <description>pdf_service_data</description>
     <url/>
@@ -65,7 +65,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
-            <scope>test</scope>
+            <scope>d</scope>
         </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
