@@ -149,4 +149,28 @@ class PdfServiceDataApplicationTests {
      * For example, ++, --, +, -, *, ==, !=, << all work the same regardless of signess (i.e. give the same answer). for >> you can substitue >>>
      * It is the /, %, >, >=, <, <= and printing functions which assume signed values, but you should be able to work around these (if you use these).
      */
+
+    @Test
+    void HashKeyPageFindKeyUsingDocumentTest() {
+        String searchKey = "INNwrLgfh8L";
+        File encodedDocument = new File("src/test/java/com/w/callum/pdf_service_data/blankPDF_base64.txt");
+        try{
+            FileInputStream fileInputStream = new FileInputStream(encodedDocument);
+            byte[] encodedDocumentData = fileInputStream.readAllBytes();
+            byte[] decodedDocument = Base64.getDecoder().decode(encodedDocumentData);
+            PDDocument document = Loader.loadPDF(decodedDocument);
+
+            HashKeyPage hashKeyPage = new HashKeyPage(searchKey, document);
+            hashKeyPage.setDpi(120f);
+            hashKeyPage.getPageUsingKey();
+            hashKeyPage.getPageIfFound().ifPresentOrElse(pdPage -> {
+                Assertions.assertTrue(hashKeyPage.isFound());
+            }, Assertions::fail);
+
+            fileInputStream.close();
+            document.close();
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
 }
