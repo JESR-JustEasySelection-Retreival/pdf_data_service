@@ -1,17 +1,26 @@
 package com.w.callum.pdf_service_data.extraction;
 
 import com.w.callum.pdf_service_data.model.Coordinate;
-import com.w.callum.pdf_service_data.model.Selection;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.List;
 
-public class ExtractionTextStripper extends PDFTextStripper {
-    public ExtractionTextStripper(PDDocument document, Coordinate... coordinate) {
+public class ExtractionTextStripper extends PDFTextStripper implements AutoCloseable {
+    private final Coordinate[] selectionCoordinates;
+    private final Writer output;
+
+    public ExtractionTextStripper(Coordinate... coordinate) {
+        this.selectionCoordinates = coordinate;
+        output = new StringWriter();
+    }
+
+    public ExtractionTextStripper(Writer output, Coordinate... coordinate) {
+        this.selectionCoordinates = coordinate;
+        this.output = output;
     }
 
     @Override
@@ -21,9 +30,19 @@ public class ExtractionTextStripper extends PDFTextStripper {
 
     @Override
     protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
-        super.writeString(text, textPositions);
+        List<Coordinate> textCoordinates = textPositions.stream().map(textPosition -> new Coordinate(textPosition.getX(),
+                textPosition.getX() + textPosition.getWidth(),
+                textPosition.getY(),
+                textPosition.getY() + textPosition.getHeight())).toList();
 
-        System.out.println(text);
+        for (Coordinate textCoord : textCoordinates) {
+            for (Coordinate selCoord : selectionCoordinates) {
+                if (textCoord.isColliding(selCoord)) {
+                    output.write(text);
+                    return;
+                }
+            }
+        }
     }
 
     @Override
@@ -34,5 +53,10 @@ public class ExtractionTextStripper extends PDFTextStripper {
     @Override
     protected void writeWordSeparator() throws IOException { //Writes the space in between words.
         super.writeWordSeparator();
+    }
+
+    @Override
+    public void close() throws Exception {
+        output.close();
     }
 }

@@ -31,7 +31,7 @@ public class RectangleCollisionTest {
     }
 
     @Test
-    public void RectangleIsInsideBoundsOfRectangleThree(){
+    public void RectangleIsInsideBoundsOfRectangleThree (){
         Coordinate rec1 = new Coordinate(100, 150, 100, 150);
         Coordinate rec2 = new Coordinate(100, 200, 100, 200);
 

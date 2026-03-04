@@ -110,7 +110,7 @@ public class BasicRoutes {
 
             byte[] bytes = Base64.getDecoder().decode(data.base64EncodedDocument().getBytes(StandardCharsets.UTF_8));
             try(PDDocument document = Loader.loadPDF(bytes)){
-                ExtractionTextStripper extractionTextStripper = new ExtractionTextStripper(document, coordinate);
+                ExtractionTextStripper extractionTextStripper = new ExtractionTextStripper(coordinate);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
