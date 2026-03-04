@@ -31,6 +31,18 @@ public class RectangleCollisionTest {
     }
 
     @Test
+    public void RectangleIsInsideBoundsOfRectangleThree(){
+        Coordinate rec1 = new Coordinate(100, 150, 100, 150);
+        Coordinate rec2 = new Coordinate(100, 200, 100, 200);
+
+        boolean result1 = rec2.isColliding(rec1);
+        boolean result2 = rec1.isColliding(rec2);
+
+        Assertions.assertTrue(result1);
+        Assertions.assertTrue(result2);
+    }
+
+    @Test
     public void RectangleIsOutsideBoundsOfRectangleOne(){
         Coordinate rec1 = new Coordinate(100, 150, 0, 150);
         Coordinate rec2 = new Coordinate(151, 200, 151, 200);
