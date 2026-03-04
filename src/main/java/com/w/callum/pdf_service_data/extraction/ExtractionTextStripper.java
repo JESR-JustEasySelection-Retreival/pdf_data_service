@@ -22,6 +22,7 @@ public class ExtractionTextStripper extends PDFTextStripper {
     @Override
     protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
         super.writeString(text, textPositions);
+
         System.out.println(text);
     }
 
