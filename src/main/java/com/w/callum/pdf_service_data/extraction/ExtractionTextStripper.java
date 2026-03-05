@@ -7,15 +7,14 @@ import org.apache.pdfbox.text.TextPosition;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.List;
+import java.util.*;
 
-public class ExtractionTextStripper extends PDFTextStripper implements AutoCloseable {
+public class ExtractionTextStripper extends PDFTextStripper {
     private final Coordinate[] selectionCoordinates;
-    private final Writer output;
+    private final Map<Double, List<TextData>> strippedData = new HashMap<>();
 
     public ExtractionTextStripper(Coordinate... coordinate) {
         this.selectionCoordinates = coordinate;
-        output = new StringWriter();
     }
 
     public ExtractionTextStripper(Writer output, Coordinate... coordinate) {
@@ -38,25 +37,25 @@ public class ExtractionTextStripper extends PDFTextStripper implements AutoClose
         for (Coordinate textCoord : textCoordinates) {
             for (Coordinate selCoord : selectionCoordinates) {
                 if (textCoord.isColliding(selCoord)) {
-                    output.write(text);
+                    write(text, textCoord, selCoord);
                     return;
                 }
             }
         }
     }
 
-    @Override
-    protected void writeLineSeparator() throws IOException { //Writes \n called the line sep character.
-        super.writeLineSeparator();
+    protected void write(String text, Coordinate textCoordinate, Coordinate selectionCoordinate){
+        System.out.println(text);
+
+        double mapKey = textCoordinate.y1();
+        List<TextData> listArr = strippedData.getOrDefault(mapKey, new ArrayList<>());
+        listArr.add(new TextData(text, textCoordinate, selectionCoordinate));
+        strippedData.put(mapKey, listArr);
     }
 
-    @Override
-    protected void writeWordSeparator() throws IOException { //Writes the space in between words.
-        super.writeWordSeparator();
+    public Map<Double, List<TextData>> getStrippedData() {
+        return strippedData;
     }
 
-    @Override
-    public void close() throws Exception {
-        output.close();
-    }
+    public record TextData(String text, Coordinate textCoordinate, Coordinate SelectionCoordinate){}
 }

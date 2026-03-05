@@ -2,18 +2,15 @@ package com.w.callum.pdf_service_data;
 
 import com.w.callum.pdf_service_data.extraction.ExtractionTextStripper;
 import com.w.callum.pdf_service_data.model.Coordinate;
-import com.w.callum.pdf_service_data.util.ImageHashing;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 
 public class ExtractionTest {
@@ -27,13 +24,12 @@ public class ExtractionTest {
 
             try (PDDocument document = Loader.loadPDF(decodedDocument)) {
                 Coordinate coordinate = new Coordinate(0, document.getPage(0).getMediaBox().getWidth(), 0, document.getPage(0).getMediaBox().getHeight());
-                try (ExtractionTextStripper extractionTextStripper = new ExtractionTextStripper(coordinate)) {
-                    extractionTextStripper.setPageStart("0");
-                    extractionTextStripper.setPageEnd("0");
-                    extractionTextStripper.getText(document);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                ExtractionTextStripper extractionTextStripper = new ExtractionTextStripper(coordinate);
+                extractionTextStripper.setPageStart("0");
+                extractionTextStripper.setPageEnd("0");
+                extractionTextStripper.getText(document);
+
+                Assertions.assertFalse(extractionTextStripper.getStrippedData().isEmpty());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
