@@ -1,6 +1,8 @@
 package com.w.callum.pdf_service_data;
 
+import com.w.callum.pdf_service_data.extraction.ExtractionTextStripper;
 import com.w.callum.pdf_service_data.extraction.HashKeyPage;
+import com.w.callum.pdf_service_data.model.Coordinate;
 import com.w.callum.pdf_service_data.util.ImageHashing;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;

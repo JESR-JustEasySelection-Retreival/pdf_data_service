@@ -45,11 +45,28 @@ public class ExtractionTextStripper extends PDFTextStripper {
     }
 
     protected void write(String text, Coordinate textCoordinate, Coordinate selectionCoordinate){
-        System.out.println(text);
-
         double mapKey = textCoordinate.y1();
         List<TextData> listArr = strippedData.getOrDefault(mapKey, new ArrayList<>());
         listArr.add(new TextData(text, textCoordinate, selectionCoordinate));
+
+        boolean swapped = false;
+        for (int i = 0; i < listArr.size(); i++) {
+            for (int x = 1; x < listArr.size() - i; x++) {
+                TextData current = listArr.get(i);
+                TextData next = listArr.get(x);
+
+                if (current.textCoordinate.x1() > next.textCoordinate.x1()){
+                    listArr.set(i, next);
+                    listArr.set(x, current);
+                    swapped = true;
+                }
+            }
+
+            if (!swapped){
+                break;
+            }
+        }
+
         strippedData.put(mapKey, listArr);
     }
 
