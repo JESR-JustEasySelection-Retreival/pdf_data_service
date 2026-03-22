@@ -1,6 +1,7 @@
 package com.w.callum.pdf_service_data.controller;
 
 import com.w.callum.pdf_service_data.extraction.ExtractionTextStripper;
+import com.w.callum.pdf_service_data.extraction.HashKeyPage;
 import com.w.callum.pdf_service_data.model.Coordinate;
 import com.w.callum.pdf_service_data.model.ExtractionRequest;
 import com.w.callum.pdf_service_data.model.Selection;
@@ -33,7 +34,7 @@ import java.util.*;
 public class BasicRoutes {
 
     static {
-        System.out.printf("Using DPI of %.2f\n", Env.getEnvOrDefault("DOCUMENT_DPI",Float::parseFloat, 72.0f));
+        System.out.printf("Using DPI of %.2f\n", Env.getEnvOrDefault("DOCUMENT_DPI", Float::parseFloat, 72.0f));
     }
 
     @PostMapping(path = "/meta", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -63,7 +64,7 @@ public class BasicRoutes {
 
                 for (int i = 0; i < noOfPages; i++) {
                     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                        BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(i, Env.getEnvOrDefault("DOCUMENT_DPI",Float::parseFloat, 72.0f));
+                        BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(i, Env.getEnvOrDefault("DOCUMENT_DPI", Float::parseFloat, 72.0f));
                         ImageIO.write(bufferedImage, "png", outputStream);
                         byte[] imageBytes = outputStream.toByteArray();
                         String pageEncoded = Base64.getEncoder().encodeToString(imageBytes);
@@ -99,25 +100,40 @@ public class BasicRoutes {
 
     @GetMapping(path = "/ping", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<Object> getPing() {
-        record Result(String message){}
+        record Result(String message) {
+        }
         return Mono.just(new Result("Pong!"));
     }
 
     @PostMapping("/extract")
     public Mono<?> getExtractData(@RequestBody ExtractionRequest data) {
-        for(Selection selection : data.selections()){
-            Coordinate coordinate = selection.coordinate();
+        Map<String, Map<Double, List<ExtractionTextStripper.TextData>>> result = new HashMap<>();
 
+        for (Selection selection : data.selections()) {
+            Coordinate coordinate = selection.coordinate();
             byte[] bytes = Base64.getDecoder().decode(data.base64EncodedDocument().getBytes(StandardCharsets.UTF_8));
-            try(PDDocument document = Loader.loadPDF(bytes)){
-                ExtractionTextStripper extractionTextStripper = new ExtractionTextStripper(coordinate);
+            try (PDDocument document = Loader.loadPDF(bytes)) {
+                HashKeyPage hashKeyPage = new HashKeyPage(selection.pageKey(), document);
+                hashKeyPage.getPageUsingKey();
+                hashKeyPage.getPageIfFound().ifPresent(pdPage -> {
+                    ExtractionTextStripper extractionTextStripper = new ExtractionTextStripper(coordinate);
+                    extractionTextStripper.setPageStart(Integer.toString(hashKeyPage.getPageIndex()));
+                    extractionTextStripper.setPageEnd(Integer.toString(hashKeyPage.getPageIndex()));
+
+                    try {
+                        extractionTextStripper.getText(document);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    Map<Double, List<ExtractionTextStripper.TextData>> strippedData = extractionTextStripper.getStrippedData();
+                    result.put(selection.selectionUUID(), strippedData);
+                });
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
         }
 
-
-        return Mono.just(ResponseEntity.badRequest().build());
+        return Mono.just(ResponseEntity.ok(result));
     }
 }
