@@ -3,7 +3,7 @@ package com.w.callum.pdf_service_data.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public record Selection(String selectionUUID, String documentUUID, Coordinate coordinate, int pageNumber, String pageKey) {
+public record Selection(String selectionUUID, String documentUUID, Coordinate coordinate, int pageNumber, String pageKey) { //FIXME: Why is selectionUUID & documentUUID a string???
     public static Coordinate[] CoordinatesToSelection(Selection... selections){
         Coordinate[] arr = new Coordinate[selections.length];
 

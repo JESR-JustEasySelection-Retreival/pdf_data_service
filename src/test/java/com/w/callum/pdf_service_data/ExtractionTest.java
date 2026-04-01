@@ -1,5 +1,8 @@
 package com.w.callum.pdf_service_data;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.w.callum.pdf_service_data.controller.BasicRoutes;
 import com.w.callum.pdf_service_data.extraction.ExtractionTextStripper;
 import com.w.callum.pdf_service_data.model.Coordinate;
@@ -14,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -53,9 +57,11 @@ public class ExtractionTest {
 
             Coordinate coordinate1 = new Coordinate(0, 612, 0, 792);
             Coordinate coordinate2 = new Coordinate(0, 612, 0, 792);
+
             Selection selection1 = new Selection(selectionUUID1, selectionUUID1, coordinate1, 0, "HGlrO8tOC2P");
             Selection selection2 = new Selection(selectionUUID2, selectionUUID2, coordinate2, 0, "HGlrO8tOC2P");
-            basicRoutes.getExtractData(new ExtractionRequest("", encodedData, selection1, selection2)).subscribe(o -> {
+
+            basicRoutes.getExtractData(new ExtractionRequest("", encodedData, Map.of(selection1.selectionUUID(), selection1, selection2.selectionUUID(), selection2))).subscribe(o -> {
                 System.out.println("Response received");
 
 
@@ -63,6 +69,14 @@ public class ExtractionTest {
                 ResponseEntity<Map<String, Map<Double, List<ExtractionTextStripper.TextData>>>> receivedData = (ResponseEntity<Map<String, Map<Double, List<ExtractionTextStripper.TextData>>>>) o;
                 Assertions.assertNotNull(receivedData.getBody());
                 System.out.println(receivedData.getBody().size());
+
+                ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+                try {
+                    String json = ow.writeValueAsString(receivedData.getBody());
+                    System.out.println(json);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
             });
         } catch (IOException e) {
             throw new RuntimeException(e);

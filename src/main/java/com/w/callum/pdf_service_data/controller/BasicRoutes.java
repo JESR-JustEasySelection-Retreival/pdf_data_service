@@ -109,7 +109,7 @@ public class BasicRoutes {
     public Mono<?> getExtractData(@RequestBody ExtractionRequest data) {
         Map<String, Map<Double, List<ExtractionTextStripper.TextData>>> result = new HashMap<>();
 
-        for (Selection selection : data.selections()) {
+        for (Selection selection : data.selections().values()) {
             Coordinate coordinate = selection.coordinate();
             byte[] bytes = Base64.getDecoder().decode(data.base64EncodedDocument().getBytes(StandardCharsets.UTF_8));
             try (PDDocument document = Loader.loadPDF(bytes)) {
